@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aspnetmvcwebapp
+spec:
+  selector:
+    matchLabels:
+      app: aspnetmvcwebapp
+  template:
+    metadata:
+      labels:
+        app: aspnetmvcwebapp # the label for the pods and the deployments
+    spec:
+      containers:
+      - name: aspnetmvcwebapp
+        image: acrdemo20201204.azurecr.io/aspnetmvcwebapp:2
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80 # the application listens to this port
+        resources:
+          requests: # minimum resources required
+            cpu: 250m
+            memory: 64Mi
+          limits: # maximum resources allocated
+            cpu: 500m
+            memory: 256Mi
+        readinessProbe: # is the container ready to receive traffic?
+          httpGet:
+            port: 80
+            path: /api/Values
+        livenessProbe: # is the container healthy?
+          httpGet:
+            port: 80
+            path: /api/Values
