@@ -17,5 +17,17 @@ steps:
   displayName: 'Build aspnetmvcwebapp'
 
 - script: docker login acrdemo20201204.azurecr.io -u $(acrusername) -p $(acrpassword)
+  displayName: 'docker login'
+
 - script: docker push acrdemo20201204.azurecr.io/aspnetmvcwebapp:$(Build.BuildId)
   displayName: 'Push aspnetmvcwebapp'
+- task: Kubernetes@1
+  inputs:
+    connectionType: 'Kubernetes Service Connection'
+    kubernetesServiceEndpoint: 'democicd'
+    namespace: 'dotnetframework46'
+    command: 'apply'
+    useConfigurationFile: true
+    configuration: 'deployment.yaml'
+    secretType: 'dockerRegistry'
+    containerRegistryType: 'Azure Container Registry'
