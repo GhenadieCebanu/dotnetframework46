@@ -24,7 +24,7 @@ steps:
 - task: Kubernetes@1
   inputs:
     connectionType: 'Kubernetes Service Connection'
-    kubernetesServiceEndpoint: 'democicd'
+    kubernetesServiceEndpoint: 'demo-aks-20201124'
     namespace: 'dotnetframework46'
     command: 'apply'
     useConfigurationFile: true
