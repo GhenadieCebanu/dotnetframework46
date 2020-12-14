@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
       - name: aspnetmvcwebapp
-        image: acrdemo20201204.azurecr.io/aspnetmvcwebapp:2
+        image: acrdemo20201204.azurecr.io/aspnetmvcwebapp:4
         imagePullPolicy: Always
         ports:
         - containerPort: 80 # the application listens to this port
