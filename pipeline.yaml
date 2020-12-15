@@ -19,5 +19,5 @@ steps:
 - script: docker login acrdemo20201204.azurecr.io -u $(acrusername) -p $(acrpassword)
   displayName: 'docker login'
 
-- script: docker push acrdemo20201204.azurecr.io/aspnetmvcwebapp:$(Build.BuildId)
+- script: docker push acrdemo20201204.azurecr.io/aspnetmvcwebapp:$(Build.BuildId)-$(Build.SourceVersion)
   displayName: 'Push aspnetmvcwebapp'
