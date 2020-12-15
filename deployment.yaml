@@ -13,22 +13,9 @@ spec:
     spec:
       containers:
       - name: aspnetmvcwebapp
-        image: acrdemo20201204.azurecr.io/aspnetmvcwebapp:4
+        image: acrdemo20201204.azurecr.io/aspnetmvcwebapp:3
         imagePullPolicy: Always
         ports:
         - containerPort: 80 # the application listens to this port
-        resources:
-          requests: # minimum resources required
-            cpu: 250m
-            memory: 64Mi
-          limits: # maximum resources allocated
-            cpu: 500m
-            memory: 256Mi
-        readinessProbe: # is the container ready to receive traffic?
-          httpGet:
-            port: 80
-            path: /api/Values
-        livenessProbe: # is the container healthy?
-          httpGet:
-            port: 80
-            path: /api/Values
+      nodeSelector:
+        kubernetes.io/os: windows
