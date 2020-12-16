@@ -13,19 +13,11 @@ steps:
 - script: docker version
   displayName: 'docker version'
 
-#- script: docker build -t acrdemo20201204.azurecr.io/aspnetmvcwebapp:$(Build.BuildId) .
-#  displayName: 'Build aspnetmvcwebapp'
+- script: docker build -t acrdemo20201204.azurecr.io/aspnetmvcwebapp:$(Build.BuildId) .
+  displayName: 'Build aspnetmvcwebapp'
 
-#- script: docker login acrdemo20201204.azurecr.io -u $(acrusername) -p $(acrpassword)
-#  displayName: 'docker login'
+- script: docker login acrdemo20201204.azurecr.io -u $(acrusername) -p $(acrpassword)
+  displayName: 'docker login'
 
-#- script: docker push acrdemo20201204.azurecr.io/aspnetmvcwebapp:$(Build.BuildId)
-#  displayName: 'Push aspnetmvcwebapp'
-- task: Kubernetes@1
-  inputs:
-    connectionType: 'Kubernetes Service Connection'
-    kubernetesServiceEndpoint: 'demo-aks-20201124'
-    namespace: 'dotnetframework46'
-    command: 'apply'
-    useConfigurationFile: true
-    configuration: 'deployment.yaml'
+- script: docker push acrdemo20201204.azurecr.io/aspnetmvcwebapp:$(Build.BuildId)
+  displayName: 'Push aspnetmvcwebapp'
