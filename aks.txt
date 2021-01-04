@@ -1,0 +1,146 @@
+####	This example was done using PowerShell
+####	Resources:
+####	https://docs.microsoft.com/en-us/learn/modules/aks-workshop/02-deploy-aks
+####	https://docs.microsoft.com/en-us/azure/aks/windows-container-cli
+
+####	All the steps needed to create the AKS cluster can be automated using Terraform https://docs.microsoft.com/en-us/azure/developer/terraform/
+
+####	Sign in interactively
+az login
+
+####	Configure az client to use specific subscription
+$SUBSCRIPTION_ID="{{your subscription id}}"
+az account set --subscription $SUBSCRIPTION_ID
+
+####	Define some variables that will be reused for different commands
+$RESOURCE_GROUP="code40-demo-aks"
+$REGION_NAME="westeurope"
+$ACR_NAME="acrdemo20201204"
+$SUBNET_NAME="demo-aks-subnet"
+$VNET_NAME="demo-aks-vnet"
+
+####	Create a new resource group
+az group create `
+    --name $RESOURCE_GROUP `
+    --location $REGION_NAME
+
+
+####	In order co create Azure container registry we will need "Microsoft.ContainerRegistry" provider
+az provider register -n Microsoft.ContainerRegistry
+
+####	Create a container registry
+az acr create `
+    --resource-group $RESOURCE_GROUP `
+    --location $REGION_NAME `
+    --name $ACR_NAME `
+    --sku Basic
+
+####	Create a virtual network and subnet. Pods deployed in your cluster will be assigned an IP from this subnet. Run the following command to create the virtual network.
+az network vnet create `
+    --resource-group $RESOURCE_GROUP `
+    --location $REGION_NAME `
+    --name $VNET_NAME `
+    --address-prefixes 10.0.0.0/8 `
+    --subnet-name $SUBNET_NAME `
+    --subnet-prefixes 10.240.0.0/16
+
+####	Store the subnet ID in a variable
+$SUBNET_ID=$(az network vnet subnet show `
+    --resource-group $RESOURCE_GROUP `
+    --vnet-name $VNET_NAME `
+    --name $SUBNET_NAME `
+    --query id -o tsv)
+	
+####	Get the latest, non-preview, Kubernetes version
+$VERSION=$(az aks get-versions `
+    --location $REGION_NAME `
+    --query 'orchestrators[?!isPreview] | [-1].orchestratorVersion' `
+    --output tsv)
+
+####	Create an AKS cluster
+####	By default, an AKS cluster is created with a node pool that can run only Linux containers.
+####	Because we need also windows containers we have to use at least standard load-balancer-sku
+#### 	Basic load balancers are not supported with multiple node pools. Create a cluster with standard load balancer selected to use multiple node pools, learn more at aka.ms/aks/nodepools.
+
+$AKS_CLUSTER_NAME="demo-aks-20201215-1"
+$PASSWORD_WIN="P@ssw0rd1234#AKS"
+
+az aks create `
+--resource-group $RESOURCE_GROUP `
+--name $AKS_CLUSTER_NAME `
+--vm-set-type VirtualMachineScaleSets `
+--node-count 2 `
+--load-balancer-sku standard  `
+--location $REGION_NAME `
+--kubernetes-version $VERSION `
+--network-plugin azure `
+--vnet-subnet-id $SUBNET_ID `
+--service-cidr 10.2.0.0/24 `
+--dns-service-ip 10.2.0.10 `
+--docker-bridge-address 172.17.0.1/16 `
+--generate-ssh-keys `
+--windows-admin-password $PASSWORD_WIN `
+--windows-admin-username azureuser
+
+####	Add windows node pull
+####	If no VmSize is specified when you add a node pool, the default size is Standard_D2s_v3 for Windows node pools and Standard_DS2_v2 for Linux node pools.
+az aks nodepool add `
+    --resource-group $RESOURCE_GROUP `
+    --cluster-name $AKS_CLUSTER_NAME `
+    --os-type Windows `
+    --name npwin `
+    --node-count 1
+
+####	In case you want to delete and recreate the cluster execute this
+az aks delete --name $AKS_CLUSTER_NAME `
+              --resource-group $RESOURCE_GROUP
+
+
+####	configure your instance of kubectl
+az aks get-credentials `
+    --resource-group $RESOURCE_GROUP `
+    --name $AKS_CLUSTER_NAME
+
+####	Use the kubectl get nodes command to list all the nodes.	
+kubectl get nodes
+
+####	Create a Kubernetes namespace
+kubectl create namespace dotnetframework46
+
+####	Configure the AKS cluster to authenticate to the container registry
+az aks update `
+    --name $AKS_CLUSTER_NAME `
+    --resource-group $RESOURCE_GROUP `
+    --attach-acr $ACR_NAME
+
+####	Create a Kubernetes deployment for our application
+####	https://github.com/GhenadieCebanu/dotnetframework46/blob/master/deployment.yaml
+kubectl apply `
+    --namespace dotnetframework46 `
+    -f deployment.yaml
+	
+####	Watch the pods rolling out using the -w flag with the kubectl get pods command
+kubectl get pods `
+    --namespace dotnetframework46 `
+    -l app=aspnetmvcwebapp -w
+
+####	If the pods aren't starting, aren't ready, or are crashing, you can view their logs by using
+kubectl logs  <pod name> --namespace dotnetframework46
+
+####	Check the status of the deployment.
+kubectl get deployments --namespace dotnetframework46
+
+####	In case you just want to delete current deployment
+kubectl delete deployment.apps/aspnetmvcwebapp --namespace dotnetframework46
+
+####	Create a Kubernetes service for our application (service of type LoadBalancer that will expose a Kubernetes service on a public IP in the cluster.)
+####	https://github.com/GhenadieCebanu/dotnetframework46/blob/master/service.yaml
+kubectl apply `
+    --namespace dotnetframework46 `
+    -f service.yaml
+	
+####	Check the status of the service. It takes a few minutes for the service to acquire the public IP
+kubectl get service aspnetmvcwebapp --namespace dotnetframework46 -w
+
+####	This command will be used in Azure DevOps in order to release new image
+kubectl set image deployment.apps/aspnetmvcwebapp aspnetmvcwebapp=acrdemo20201204.azurecr.io/aspnetmvcwebapp:4 -n dotnetframework46 -o json

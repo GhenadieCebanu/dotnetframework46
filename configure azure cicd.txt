@@ -1,0 +1,13 @@
+####	We will use azure pipelines in this demo
+####	Define pipeline in Azure DevOps
+####	Pipeline will build our docker image based on Dockerfile and push it to Azure container registry
+####	Our pipeline is using two variables ($(acrusername) $(acrpassword)) that are defined in pipeline view (edit mode)
+
+####	Dockerfile: https://github.com/GhenadieCebanu/dotnetframework46/blob/master/Dockerfile
+####	.yaml pipeline: https://github.com/GhenadieCebanu/dotnetframework46/blob/master/pipeline.yaml
+
+
+####	In order to trigger release of the latest image we can use Pipelines/Releases
+####	One basic example is using "Deploy to a Kubernetes cluster" template when creating pipeline release,
+####	here we will use "kubectl set" command in stage task for releasing latest image
+####	Arguments for "kubectl set" command: image deployment.apps/aspnetmvcwebapp aspnetmvcwebapp=acrdemo20201204.azurecr.io/aspnetmvcwebapp:$(Build.BuildId)
