@@ -8,6 +8,8 @@
 
 
 ####	In order to trigger release of the latest image we can use Pipelines/Releases
+####	Enable "Continuous deployment trigger" based on "Azure Container Repository" used to push docker images
 ####	One basic example is using "Deploy to a Kubernetes cluster" template when creating pipeline release,
 ####	here we will use "kubectl set" command in stage task for releasing latest image
 ####	Arguments for "kubectl set" command: image deployment.apps/aspnetmvcwebapp aspnetmvcwebapp=acrdemo20201204.azurecr.io/aspnetmvcwebapp:$(Build.BuildId)
+####	"kubectl set" will do by default blue/green deployment for the image specified
