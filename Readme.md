@@ -23,3 +23,5 @@ https://github.com/GhenadieCebanu/dotnetframework46/blob/master/configure%20azur
 ### Useful links
 https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=azure-devops&tabs=yaml#use-a-microsoft-hosted-agent
 https://docs.microsoft.com/en-us/learn/modules/aks-workshop/
+https://kubernetes.io/docs/reference/kubectl/cheatsheet/
+https://docs.microsoft.com/en-us/azure/aks/windows-container-cli
